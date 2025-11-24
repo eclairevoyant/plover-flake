@@ -2,10 +2,7 @@
   buildPythonPackage,
   fetchPypi,
   inputs,
-  lib,
-  qt6,
   stdenvNoCC,
-  writeShellScriptBin,
 
   # build-system
   poetry-core,
@@ -19,7 +16,6 @@
   hatchling,
   hidapi,
   hjson,
-  importlib-metadata,
   inflect,
   jsonpickle,
   kaitaistruct,
@@ -43,7 +39,6 @@
 
   # test
   pytest,
-  pytestCheckHook,
 }:
 let
   spylls = buildPythonPackage rec {

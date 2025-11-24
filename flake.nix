@@ -57,6 +57,38 @@
 
       formatter = forEachSystem (pkgs: pkgs.nixfmt-tree);
 
+      # TODO cleanup
+      overlays.default = final: prev: {
+        plover =
+          let
+            plover' = final.python3Packages.callPackage ./plover.nix { inherit inputs; };
+            withPlugins =
+              f: # f is a function such as (ps: with ps; [ plugin names ])
+              plover'.overridePythonAttrs (old: {
+                dependencies = old.dependencies ++ (f final.ploverPlugins);
+              });
+          in
+          plover' // { inherit withPlugins; };
+
+        ploverPlugins = final.python3Packages.callPackage ./plugins.nix {
+          inherit (final) plover;
+          inherit inputs;
+        };
+
+        plover-full =
+          let
+            plover' = final.plover.withPlugins (
+              ps: builtins.filter (x: x ? meta && !x.meta.broken) (builtins.attrValues ps)
+            );
+            withPlugins =
+              f: # f is a function such as (ps: with ps; [ plugin names ])
+              plover'.overridePythonAttrs (old: {
+                dependencies = old.dependencies ++ (f final.ploverPlugins);
+              });
+          in
+          plover' // { inherit withPlugins; };
+      };
+
       ploverPlugins = forEachSystem (
         pkgs:
         pkgs.python3Packages.callPackage ./plugins.nix {
@@ -94,8 +126,9 @@
         update = pkgs.callPackage ./update.nix { inherit inputs; };
       });
 
-      homeManagerModules = rec {
-        plover = import ./hm-module.nix self;
+      hjemModules = rec {
+        plover = import ./hjemModule.nix self;
+        default = plover;
       };
     };
 }

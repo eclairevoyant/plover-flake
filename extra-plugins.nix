@@ -1,10 +1,3 @@
-{
-  inputs,
-  plover,
-  hid,
-  bitarray,
-  setuptools,
-  buildPythonPackage,
-}:
+{ ... }:
 {
 }

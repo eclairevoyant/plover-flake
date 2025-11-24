@@ -22,23 +22,18 @@ in
   options.programs.plover = {
     enable = lib.mkEnableOption "plover";
 
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = self.packages.${pkgs.system}.plover;
-      example =
-        lib.literalExpression # nix
-          ''
-            inputs.plover-flake.${pkgs.system}.plover.withPlugins (ps: with ps; [
-              plover-lapwing-aio
-              plover-console-ui
-            ])
-          '';
+    package = lib.mkPackageOption pkgs "plover" { } // {
+      example = lib.literalExpression /* nix */ ''
+        inputs.plover-flake.${pkgs.system}.plover.withPlugins (ps: with ps; [
+          plover-lapwing-aio
+          plover-console-ui
+        ])
+      '';
     };
 
     settings = lib.mkOption {
       description = ''
         The plover configuration, written to `$XDG_CONFIG_HOME/plover/plover.cfg`.
-        If null, the configuration will not be managed by home-manager.
       '';
       type =
         with lib.types;
@@ -122,20 +117,16 @@ in
   config =
     let
       configFile = iniFormat.generate "plover.cfg" (
-        # It is necessary to filter the attrs because the option definitions require a default value, but should be unset in the result.
         lib.filterAttrsRecursive (n: v: v != null) cfg.settings
       );
     in
     lib.mkIf cfg.enable (
       lib.mkMerge [
         {
-          home.packages = [ cfg.package ];
+          packages = [ cfg.package ];
         }
-        (lib.mkIf (cfg.settings != null && pkgs.stdenvNoCC.isLinux) {
-          home.file.".config/plover/plover.cfg".source = configFile;
-        })
-        (lib.mkIf (cfg.settings != null && pkgs.stdenvNoCC.isDarwin) {
-          home.file."Library/Application Support/plover/plover.cfg".source = configFile;
+        (lib.mkIf (cfg.settings != null) {
+          xdg.config.files."plover/plover.cfg".source = configFile;
         })
       ]
     );
